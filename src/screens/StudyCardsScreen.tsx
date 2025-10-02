@@ -73,6 +73,7 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
     restartFromBeginning,
     viewAllQuestions,
     closeProgressModal,
+    markSectionCompleted,
   } = useSectionProgress(sectionId, filteredQuestions.length);
 
   if (filteredQuestions.length === 0) {
@@ -327,6 +328,9 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
       }
       setIsCardFlipped(false); // Resetear estado de volteo al cambiar pregunta
     } else {
+      // Marcar la sección como completada
+      markSectionCompleted();
+      
       const nextSubcategory = getNextSubcategory();
       if (nextSubcategory) {
         const navigateToNext = () => {

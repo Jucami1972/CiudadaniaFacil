@@ -24,10 +24,16 @@ export const useSectionProgress = (sectionId: string, totalQuestions: number) =>
     loadProgress();
   }, [sectionId]);
 
-  // Guardar progreso automáticamente cada 5 preguntas
+  // Guardar progreso automáticamente cada 5 preguntas Y cuando el usuario navega
   useEffect(() => {
-    if (progress.currentIndex > 0 && progress.currentIndex % 5 === 0) {
+    if (progress.currentIndex > 0) {
+      // Guardar inmediatamente cuando el usuario navega
       saveProgress(progress.currentIndex);
+      
+      // También guardar cada 5 preguntas para mayor seguridad
+      if (progress.currentIndex % 5 === 0) {
+        console.log(`Progreso guardado automáticamente en pregunta ${progress.currentIndex + 1}`);
+      }
     }
   }, [progress.currentIndex]);
 
@@ -41,6 +47,7 @@ export const useSectionProgress = (sectionId: string, totalQuestions: number) =>
         if (savedIndex > 0 && savedIndex < totalQuestions) {
           setProgress(prev => ({
             ...prev,
+            currentIndex: savedIndex, // Iniciar desde donde quedó
             lastSavedIndex: savedIndex,
           }));
           
@@ -72,6 +79,8 @@ export const useSectionProgress = (sectionId: string, totalQuestions: number) =>
       ...prev,
       currentIndex: index,
     }));
+    // Guardar inmediatamente cuando se actualiza el índice
+    saveProgress(index);
   };
 
   const continueFromSaved = () => {
@@ -108,10 +117,26 @@ export const useSectionProgress = (sectionId: string, totalQuestions: number) =>
       await AsyncStorage.removeItem(progressKey);
       setProgress(prev => ({
         ...prev,
+        currentIndex: 0,
         lastSavedIndex: 0,
       }));
     } catch (error) {
       console.error('Error clearing section progress:', error);
+    }
+  };
+
+  // Función para marcar la sección como completada
+  const markSectionCompleted = async () => {
+    try {
+      await AsyncStorage.removeItem(progressKey);
+      setProgress(prev => ({
+        ...prev,
+        currentIndex: 0,
+        lastSavedIndex: 0,
+      }));
+      setShowProgressModal(false);
+    } catch (error) {
+      console.error('Error marking section as completed:', error);
     }
   };
 
@@ -127,5 +152,6 @@ export const useSectionProgress = (sectionId: string, totalQuestions: number) =>
     closeProgressModal,
     saveProgress,
     clearProgress,
+    markSectionCompleted,
   };
 };

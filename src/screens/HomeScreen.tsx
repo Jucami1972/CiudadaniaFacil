@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ImageBackground,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -192,29 +193,44 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { 
     flex: 1, 
-    backgroundColor: '#f5f5f5' 
+    backgroundColor: '#f5f5f5',
+    ...(Platform.OS === 'web' && {
+      paddingTop: 20, // Espaciado superior para web
+    }),
   },
   headerWrapper: {
     width,
-    height: 200,
+    height: Platform.OS === 'web' ? 300 : 200, // Más alto en web
     overflow: 'hidden',
     borderBottomRightRadius: 90,
+    ...(Platform.OS === 'web' && {
+      marginHorizontal: 'auto', // Centrar en web
+      maxWidth: 1200, // Ancho máximo para pantallas grandes
+      borderRadius: 20, // Bordes redondeados en web
+      marginTop: 10,
+      marginBottom: 20,
+    }),
   },
   headerBackground: { 
     width: '100%', 
-    height: '100%' 
+    height: '100%',
   },
   headerOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0)',
+    backgroundColor: Platform.OS === 'web' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0)',
   },
   container: {
     flex: 1,
-    padding: 16,
+    padding: Platform.OS === 'web' ? 24 : 16,
     alignItems: 'center',
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1200,
+      marginHorizontal: 'auto',
+      width: '100%',
+    }),
   },
   menuItemContainer: {
-    width: width * 0.9,
+    width: Platform.OS === 'web' ? Math.min(width * 0.9, 800) : width * 0.9,
     marginBottom: 16,
     borderRadius: 20,
     shadowColor: '#000',
@@ -222,6 +238,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
+    ...(Platform.OS === 'web' && {
+      transition: 'transform 0.2s ease-in-out',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+      },
+    }),
   },
   menuItem: { 
     height: 100, 

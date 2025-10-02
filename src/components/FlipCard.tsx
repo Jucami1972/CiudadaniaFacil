@@ -34,6 +34,7 @@ interface FlipCardProps {
   };
   language: 'en' | 'es';
   isImportant?: boolean;
+  onFlip?: (isFlipped: boolean) => void;
 }
 
 interface FlipCardHandle {
@@ -43,7 +44,7 @@ interface FlipCardHandle {
 const { width } = Dimensions.get('window');
 
 const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(
-  ({ frontContent, backContent, language, isImportant = false }, ref) => {
+  ({ frontContent, backContent, language, isImportant = false, onFlip }, ref) => {
     const anim = useRef(new Animated.Value(0)).current;
     const flipped = useRef(false);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -103,6 +104,11 @@ const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(
       }).start();
       flipped.current = !flipped.current;
       stopAudio(); // Detener el audio al voltear
+      
+      // Notificar al componente padre sobre el cambio de estado
+      if (onFlip) {
+        onFlip(flipped.current);
+      }
     };
 
     const reset = () => {
@@ -114,6 +120,11 @@ const FlipCard = forwardRef<FlipCardHandle, FlipCardProps>(
       }).start();
       flipped.current = false;
       stopAudio();
+      
+      // Notificar al componente padre sobre el reset
+      if (onFlip) {
+        onFlip(false);
+      }
     };
 
     const playQuestionAudio = async () => {

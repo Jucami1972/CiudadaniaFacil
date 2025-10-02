@@ -22,6 +22,8 @@ import { colors, sectionGradients } from '../constants/colors';
 import { spacing, radius, shadow } from '../constants/spacing';
 import { fontSize, fontWeight, lineHeight } from '../constants/typography';
 import FlipCard from '../components/FlipCard';
+import ProgressModal from '../components/ProgressModal';
+import { useSectionProgress } from '../hooks/useSectionProgress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
@@ -45,7 +47,7 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
   const flipCardRef = useRef<any>(null);
 
   const [language, setLanguage] = useState<'en' | 'es'>('en');
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -57,6 +59,21 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
       (q) => q.category === category && q.subcategory === subtitle
     );
   }, [category, subtitle]);
+
+  // Crear ID único para la sección
+  const sectionId = `${category}_${subtitle}`.replace(/\s+/g, '_');
+  
+  // Hook para manejar progreso de la sección
+  const {
+    currentIndex,
+    showProgressModal,
+    isLoading: progressLoading,
+    updateCurrentIndex,
+    continueFromSaved,
+    restartFromBeginning,
+    viewAllQuestions,
+    closeProgressModal,
+  } = useSectionProgress(sectionId, filteredQuestions.length);
 
   if (filteredQuestions.length === 0) {
     return (
@@ -95,9 +112,8 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
 
   const handleLanguageChange = (newLanguage: 'en' | 'es') => {
     setLanguage(newLanguage);
-    if (flipCardRef.current) {
-      flipCardRef.current.reset();
-    }
+    // NO resetear la tarjeta para mantener el estado de volteo
+    // Solo cambiar el idioma del contenido
   };
 
   const getPreviousSubcategory = () => {
@@ -210,10 +226,11 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      updateCurrentIndex(currentIndex - 1);
       if (flipCardRef.current) {
         flipCardRef.current.reset();
       }
+      setIsCardFlipped(false); // Resetear estado de volteo al cambiar pregunta
     } else {
       const previousSubcategory = getPreviousSubcategory();
       if (previousSubcategory) {
@@ -304,10 +321,11 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
 
   const handleNext = () => {
     if (currentIndex < filteredQuestions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      updateCurrentIndex(currentIndex + 1);
       if (flipCardRef.current) {
         flipCardRef.current.reset();
       }
+      setIsCardFlipped(false); // Resetear estado de volteo al cambiar pregunta
     } else {
       const nextSubcategory = getNextSubcategory();
       if (nextSubcategory) {
@@ -439,6 +457,7 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
           }}
           language={language}
           isImportant={current.asterisk}
+          onFlip={setIsCardFlipped}
         />
       </ScrollView>
 
@@ -502,6 +521,18 @@ const StudyCardsScreen: React.FC<Props> = ({ route }) => {
           <MaterialCommunityIcons name="chevron-right" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* Modal de progreso guardado */}
+      <ProgressModal
+        visible={showProgressModal}
+        onClose={closeProgressModal}
+        onContinue={continueFromSaved}
+        onRestart={restartFromBeginning}
+        onViewAll={viewAllQuestions}
+        sectionName={subtitle || title}
+        currentQuestion={currentIndex + 1}
+        totalQuestions={filteredQuestions.length}
+      />
     </SafeAreaView>
   );
 };

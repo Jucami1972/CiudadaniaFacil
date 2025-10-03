@@ -231,6 +231,8 @@ const CategoryPracticeScreen = () => {
 
   const handleCategorySelect = (categoryId: string) => {
     console.log('🎯 handleCategorySelect llamado con:', categoryId);
+    console.log('🌐 Platform.OS:', Platform.OS);
+    console.log('🖱️ Evento de clic detectado');
     
     try {
       setSelectedCategory(categoryId);
@@ -483,6 +485,16 @@ const CategoryPracticeScreen = () => {
             style={styles.categoryCard}
             onPress={() => handleCategorySelect(category.id)}
             activeOpacity={0.8}
+            accessibilityLabel={`Seleccionar categoría ${category.title}`}
+            accessibilityRole="button"
+            accessibilityHint={`Practica preguntas de ${category.title}`}
+            {...Platform.select({
+              web: {
+                onClick: () => handleCategorySelect(category.id),
+                onMouseEnter: () => console.log('Mouse enter:', category.title),
+                onMouseLeave: () => console.log('Mouse leave:', category.title),
+              },
+            })}
           >
             <LinearGradient
               colors={category.gradient}
@@ -864,6 +876,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     maxWidth: 150,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'scale(1.05)',
+        },
+      },
+    }),
     minHeight: 80,
   },
   gradient: {

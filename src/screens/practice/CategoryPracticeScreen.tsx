@@ -19,7 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
-import { useVoiceRecognition } from '../../hooks/useVoiceRecognition';
+// import { useVoiceRecognition } from '../../hooks/useVoiceRecognition';
 import { NavigationProps } from '../../types/navigation';
 import { colors } from '../../constants/colors';
 import { spacing } from '../../constants/spacing';
@@ -74,22 +74,39 @@ const CategoryPracticeScreen = () => {
   const getAllQuestionsByCategory = (categoryId: string): PracticeQuestion[] => {
     console.log('🔍 getAllQuestionsByCategory llamado con categoryId:', categoryId);
     
-    const categoryQuestions = getQuestionsByCategory(categoryId as 'government' | 'history' | 'civics');
-    console.log('📚 Preguntas obtenidas de getQuestionsByCategory:', categoryQuestions.length);
-    
-    // Agregar modo aleatorio a cada pregunta
-    const questionsWithMode = categoryQuestions.map(q => ({
-      ...q,
-      mode: Math.random() < 0.5 ? 'text-text' : 'voice-text' as QuestionMode
-    }));
-    
-    console.log('🎲 Preguntas con modo asignado:', questionsWithMode.length);
-    
-    // Ordenar aleatoriamente
-    const shuffledQuestions = questionsWithMode.sort(() => Math.random() - 0.5);
-    console.log('🔄 Preguntas ordenadas aleatoriamente:', shuffledQuestions.length);
-    
-    return shuffledQuestions;
+    try {
+      // Validar que categoryId sea válido
+      const validCategories = ['government', 'history', 'civics'];
+      if (!validCategories.includes(categoryId)) {
+        console.error('❌ Categoría inválida:', categoryId);
+        return [];
+      }
+      
+      const categoryQuestions = getQuestionsByCategory(categoryId as 'government' | 'history' | 'civics');
+      console.log('📚 Preguntas obtenidas de getQuestionsByCategory:', categoryQuestions.length);
+      
+      if (categoryQuestions.length === 0) {
+        console.warn('⚠️ No se encontraron preguntas para la categoría:', categoryId);
+        return [];
+      }
+      
+      // Agregar modo aleatorio a cada pregunta
+      const questionsWithMode = categoryQuestions.map(q => ({
+        ...q,
+        mode: Math.random() < 0.5 ? 'text-text' : 'voice-text' as QuestionMode
+      }));
+      
+      console.log('🎲 Preguntas con modo asignado:', questionsWithMode.length);
+      
+      // Ordenar aleatoriamente
+      const shuffledQuestions = questionsWithMode.sort(() => Math.random() - 0.5);
+      console.log('🔄 Preguntas ordenadas aleatoriamente:', shuffledQuestions.length);
+      
+      return shuffledQuestions;
+    } catch (error) {
+      console.error('❌ Error en getAllQuestionsByCategory:', error);
+      return [];
+    }
   };
 
   const categories: Category[] = [
@@ -117,28 +134,40 @@ const CategoryPracticeScreen = () => {
   ];
 
   // Hook para reconocimiento de voz
-  const { 
-    isRecording, 
-    isSupported: voiceSupported, 
-    error: voiceError,
-    startRecording, 
-    stopRecording 
-  } = useVoiceRecognition({
-    onSpeechResult: (text) => {
-      console.log('Voice result received:', text);
-      setUserAnswer(text);
-    },
-    onError: (error) => {
-      console.error('Voice recognition error:', error);
-      Alert.alert('Error de Voz', error);
-    },
-    onStart: () => {
-      console.log('Voice recognition started');
-    },
-    onEnd: () => {
-      console.log('Voice recognition ended');
-    }
-  });
+  // Temporalmente deshabilitado para web
+  const isRecording = false;
+  const voiceSupported = false;
+  const voiceError = null;
+  const startRecording = () => {
+    console.log('Voice recording not supported in web');
+    Alert.alert('No disponible', 'El reconocimiento de voz no está disponible en la versión web');
+  };
+  const stopRecording = () => {
+    console.log('Stop recording called');
+  };
+  
+  // const { 
+  //   isRecording, 
+  //   isSupported: voiceSupported, 
+  //   error: voiceError,
+  //   startRecording, 
+  //   stopRecording 
+  // } = useVoiceRecognition({
+  //   onSpeechResult: (text) => {
+  //     console.log('Voice result received:', text);
+  //     setUserAnswer(text);
+  //   },
+  //   onError: (error) => {
+  //     console.error('Voice recognition error:', error);
+  //     Alert.alert('Error de Voz', error);
+  //   },
+  //   onStart: () => {
+  //     console.log('Voice recognition started');
+  //   },
+  //   onEnd: () => {
+  //     console.log('Voice recognition ended');
+  //   }
+  // });
 
   // Cargar preguntas incorrectas y marcadas al iniciar
   useEffect(() => {
@@ -201,22 +230,36 @@ const CategoryPracticeScreen = () => {
   };
 
   const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setQuestionIndex(0);
-    setScore(0);
-    setUserAnswer('');
-    setIsCorrect(null);
+    console.log('🎯 handleCategorySelect llamado con:', categoryId);
     
-    // Obtener TODAS las preguntas disponibles por categoría de forma aleatoria
-    const categoryQuestions = getAllQuestionsByCategory(categoryId);
-    if (categoryQuestions.length > 0) {
-      setTotalQuestions(categoryQuestions.length);
-      setCurrentQuestion(categoryQuestions[0]);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
+    try {
+      setSelectedCategory(categoryId);
+      setQuestionIndex(0);
+      setScore(0);
+      setUserAnswer('');
+      setIsCorrect(null);
+      
+      // Obtener TODAS las preguntas disponibles por categoría de forma aleatoria
+      const categoryQuestions = getAllQuestionsByCategory(categoryId);
+      console.log('📊 Preguntas obtenidas:', categoryQuestions.length);
+      
+      if (categoryQuestions.length > 0) {
+        setTotalQuestions(categoryQuestions.length);
+        setCurrentQuestion(categoryQuestions[0]);
+        console.log('✅ Primera pregunta establecida:', categoryQuestions[0].question);
+        
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        console.error('❌ No se encontraron preguntas para la categoría:', categoryId);
+        Alert.alert('Error', 'No se encontraron preguntas para esta categoría');
+      }
+    } catch (error) {
+      console.error('❌ Error en handleCategorySelect:', error);
+      Alert.alert('Error', 'Ocurrió un error al cargar las preguntas');
     }
   };
 
